@@ -20,7 +20,7 @@ end
 function extractImageNamesRecursive(dir)
     local files = {}
     print("Extracting image paths: " .. dir)
-  
+
     local function browseFolder(root, pathTable)
         for entity in lfs.dir(root) do
             if entity~="." and entity~=".." then
@@ -28,7 +28,7 @@ function extractImageNamesRecursive(dir)
                 local mode=lfs.attributes(fullPath,"mode")
                 if mode=="file" then
                     local filepath = paths.concat(root, entity)
-  
+
                     if string.find(filepath, 'jpg$')
                     or string.find(filepath, 'png$')
                     or string.find(filepath, 'jpeg$')
@@ -66,7 +66,7 @@ function torch.find(tensor, val, dim)
    if dim then
       assert(tensor:dim() == 2, "torch.find dim arg only supports matrices for now")
       assert(dim == 2, "torch.find only supports dim=2 for now")
-            
+
       local colSize, rowSize = tensor:size(1), tensor:size(2)
       local rowIndice = {}
       tensor:apply(function(x)

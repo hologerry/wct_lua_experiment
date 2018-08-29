@@ -86,7 +86,7 @@ function wct2(contentFeature, styleFeature)
     local c_mean = torch.mean(contentFeature, 2)
     contentFeature = contentFeature - c_mean:expandAs(contentFeature)
     local contentCov = torch.mm(contentFeature, contentFeature:t()):div(sg[2]-1)  --512*512
-    local c_u, c_e, c_v = torch.svd(contentCov:float(), 'A')  
+    local c_u, c_e, c_v = torch.svd(contentCov:float(), 'A')
 
     local k_c = sg[1]
     for i=1, sg[1] do
@@ -112,21 +112,21 @@ function wct2(contentFeature, styleFeature)
             break
        end
     end
-    
-    
+
+
     local c_d = c_e[{{1,k_c}}]:sqrt():pow(-1)
     local s_d1 = s_e[{{1,k_s}}]:sqrt()
 
     local whiten_contentFeature = nil
     local tFeature = nil
     if opt.gpu >= 0 then
-        whiten_contentFeature = (c_v[{{},{1,k_c}}]:cuda()) * torch.diag(c_d:cuda()) * (c_v[{{},{1,k_c}}]:t():cuda()) *contentFeature     
+        whiten_contentFeature = (c_v[{{},{1,k_c}}]:cuda()) * torch.diag(c_d:cuda()) * (c_v[{{},{1,k_c}}]:t():cuda()) *contentFeature
         tFeature = (s_v[{{},{1,k_s}}]:cuda()) * (torch.diag(s_d1:cuda())) * (s_v[{{},{1,k_s}}]:t():cuda()) * whiten_contentFeature
     else
-        whiten_contentFeature = c_v[{{},{1,k_c}}] * torch.diag(c_d) * (c_v[{{},{1,k_c}}]:t()) * contentFeature     
+        whiten_contentFeature = c_v[{{},{1,k_c}}] * torch.diag(c_d) * (c_v[{{},{1,k_c}}]:t()) * contentFeature
         tFeature = s_v[{{},{1,k_s}}] * (torch.diag(s_d1)) * (s_v[{{},{1,k_s}}]:t()) * whiten_contentFeature
     end
-    
+
     tFeature = tFeature + s_mean:expandAs(tFeature)
 
     return tFeature
@@ -142,12 +142,12 @@ function feature_wct(contentFeature, styleFeature1, styleFeature2)
     local C, H, W = contentFeature:size(1), contentFeature:size(2), contentFeature:size(3)
     local maskResized = image.scale(mask, W, H, 'simple')
 
-    
+
     local maskView = maskResized:view(-1)
     maskView = torch.gt(maskView, 0.5)
-    local fgmask = torch.LongTensor(torch.find(maskView, 1)) -- foreground indices 
+    local fgmask = torch.LongTensor(torch.find(maskView, 1)) -- foreground indices
     local bgmask = torch.LongTensor(torch.find(maskView, 0)) -- background indices
-        
+
     local contentFeatureView = contentFeature:view(C, -1)
     local contentFeatureFG = contentFeatureView:index(2, fgmask):view(C, fgmask:nElement()) -- C * #fg
     local contentFeatureBG = contentFeatureView:index(2, bgmask):view(C, bgmask:nElement()) -- C * #bg
@@ -155,12 +155,12 @@ function feature_wct(contentFeature, styleFeature1, styleFeature2)
     local targetFeatureFG = wct2(contentFeatureFG, styleFeatureFG)
     local targetFeatureBG = wct2(contentFeatureBG, styleFeatureBG)
 
- 
+
     targetFeature = contentFeatureView:clone():zero() -- C * (H*W)
     targetFeature:indexCopy(2, fgmask ,targetFeatureFG)
     targetFeature:indexCopy(2, bgmask ,targetFeatureBG)
     targetFeature = targetFeature:viewAs(contentFeature)
-   
+
     return targetFeature
 end
 
@@ -173,7 +173,7 @@ local function styleTransfer(content, style)
     local s2 = style[2]
 
     if opt.gpu >= 0 then
-        content = content:cuda()        
+        content = content:cuda()
         s1 = s1:cuda()
         s2 = s2:cuda()
     else
@@ -211,7 +211,7 @@ local function styleTransfer(content, style)
     local sF31 = vgg3:forward(s1):clone()
     local sF32 = vgg3:forward(s2):clone()
     vgg3 = nil
-  
+
     local csF3 = feature_wct(cF3, sF31, sF32)
     csF3 = opt.alpha * csF3 + (1-opt.alpha) * cF3
     local Im3 = decoder3:forward(csF3)
@@ -236,9 +236,9 @@ local function styleTransfer(content, style)
 
     local csF1 = feature_wct(cF1, sF11, sF12)
     csF1 = opt.alpha * csF1 + (1-opt.alpha) * cF1
-    local Im1 = decoder1:forward(csF1) 
+    local Im1 = decoder1:forward(csF1)
     decoder1 = nil
-    
+
     return Im1
 end
 
@@ -259,7 +259,7 @@ else -- use a batch of content images
     contentPaths = extractImageNamesRecursive(opt.contentDir)
 end
 
-if opt.style ~= '' then 
+if opt.style ~= '' then
     style_image_list = opt.style:split(',')
     for i=1, #style_image_list do
         table.insert(stylePaths, style_image_list[i])
@@ -281,7 +281,7 @@ for i=1,numContent do
 
     styleImg = {}
     styleName = ''
-    for j=1,numStyle do 
+    for j=1,numStyle do
         local stylePath = stylePaths[j]
         styleExt = paths.extname(stylePath)
         style = image.load(stylePath, 3, 'float')
@@ -289,10 +289,10 @@ for i=1,numContent do
         table.insert(styleImg, style)
         styleName = paths.basename(stylePath, styleExt)
     end
-            
+
     local output = styleTransfer(contentImg, styleImg)
     local savePath = paths.concat(opt.outputDir, contentName .. '_stylized_' ..'alpha_' ..opt.alpha*100 .. '.' .. opt.saveExt)
     print('Output image saved at: ' .. savePath)
     image.save(savePath, output)
-    
+
 end

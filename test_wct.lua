@@ -92,14 +92,14 @@ end
 
 
 function feature_swap_whiten(contentFeature, styleFeature)
-   
+
    -- content feature whitening
     local sg = contentFeature:size()
     local contentFeature1 = contentFeature:view(sg[1], sg[2]*sg[3])
     local c_mean = torch.mean(contentFeature1, 2)
     contentFeature1 = contentFeature1 - c_mean:expandAs(contentFeature1)
     local contentCov = torch.mm(contentFeature1, contentFeature1:t()):div(sg[2]*sg[3]-1)  --512*512
-    local c_u, c_e, c_v = torch.svd(contentCov:float(), 'A')  
+    local c_u, c_e, c_v = torch.svd(contentCov:float(), 'A')
 
     local k_c = sg[1]
     for i=1, sg[1] do
@@ -126,15 +126,15 @@ function feature_swap_whiten(contentFeature, styleFeature)
     end
 
     local s_d = torch.sqrt(s_e[{{1,k_s}}]):pow(-1)
-    
+
     local whiten_styleFeature = nil
     if opt.gpu >= 0 then
         whiten_styleFeature = (s_v[{{},{1,k_s}}]:cuda()) * torch.diag(s_d:cuda()) * (s_v[{{},{1,k_s}}]:t():cuda()) * styleFeature1
     else
         whiten_styleFeature = s_v[{{},{1,k_s}}] * torch.diag(s_d) * (s_v[{{},{1,k_s}}]:t()) * styleFeature1
     end
-    
-    
+
+
     -- borrow from https://github.com/rtqichen/style-swap/blob/master/style-swap.lua
     local swap_enc, swap_dec = NonparametricPatchAutoencoderFactory.buildAutoencoder(whiten_styleFeature:resize(sz[1], sz[2], sz[3]), opt.patchSize, opt.patchStride, false, false, true)
 
@@ -151,7 +151,7 @@ function feature_swap_whiten(contentFeature, styleFeature)
 
     local c_d = torch.sqrt(c_e[{{1,k_c}}]):pow(-1)
     local s_d1 = torch.sqrt(s_e[{{1,k_s}}])
-    
+
     local whiten_contentFeature = nil
     local targetFeature = nil
     if opt.gpu >= 0 then
@@ -163,18 +163,18 @@ function feature_swap_whiten(contentFeature, styleFeature)
         whiten_contentFeature = c_v[{{},{1,k_c}}] * torch.diag(c_d) * (c_v[{{},{1,k_c}}]:t()) * contentFeature1
         local swap_latent = swap:forward(whiten_contentFeature:resize(sg[1], sg[2], sg[3])):clone()
         local swap_latent1 = swap_latent:view(sg[1], sg[2]*sg[3])
-        targetFeature = s_v[{{},{1,k_s}}] * torch.diag(s_d1) * (s_v[{{},{1,k_s}}]:t()) * swap_latent1  
+        targetFeature = s_v[{{},{1,k_s}}] * torch.diag(s_d1) * (s_v[{{},{1,k_s}}]:t()) * swap_latent1
     end
-    
+
     targetFeature = targetFeature + s_mean:expandAs(targetFeature)
     local tFeature = targetFeature:resize(sg[1], sg[2], sg[3])
-    
+
     return tFeature
 end
 
 
 function feature_wct(contentFeature, styleFeature)
-    
+
    -- content feature whitening
     local sg = contentFeature:size()
     local contentFeature1 = contentFeature:view(sg[1], sg[2]*sg[3])
@@ -184,9 +184,9 @@ function feature_wct(contentFeature, styleFeature)
     --------------------------------------------------------
     --Currently, we only perform the SVD using CPU.
     --A GPU-supported math library can be found here (not tested yet):
-    --http://jinjiren.github.io/blog/gpu-math-using-torch-and-magma/ 
+    --http://jinjiren.github.io/blog/gpu-math-using-torch-and-magma/
     --------------------------------------------------------
-    local c_u, c_e, c_v = torch.svd(contentCov:float(), 'A')  
+    local c_u, c_e, c_v = torch.svd(contentCov:float(), 'A')
 
     local k_c = sg[1]
     for i=1, sg[1] do
@@ -218,13 +218,13 @@ function feature_wct(contentFeature, styleFeature)
     local whiten_contentFeature = nil
     local targetFeature = nil
     if opt.gpu >= 0 then
-        whiten_contentFeature = (c_v[{{},{1,k_c}}]:cuda()) * torch.diag(c_d:cuda()) * (c_v[{{},{1,k_c}}]:t():cuda()) *contentFeature1      
+        whiten_contentFeature = (c_v[{{},{1,k_c}}]:cuda()) * torch.diag(c_d:cuda()) * (c_v[{{},{1,k_c}}]:t():cuda()) *contentFeature1
         targetFeature = (s_v[{{},{1,k_s}}]:cuda()) * (torch.diag(s_d1:cuda())) * (s_v[{{},{1,k_s}}]:t():cuda()) * whiten_contentFeature
     else
-        whiten_contentFeature = c_v[{{},{1,k_c}}] * torch.diag(c_d) * (c_v[{{},{1,k_c}}]:t()) * contentFeature1      
+        whiten_contentFeature = c_v[{{},{1,k_c}}] * torch.diag(c_d) * (c_v[{{},{1,k_c}}]:t()) * contentFeature1
         targetFeature = s_v[{{},{1,k_s}}] * (torch.diag(s_d1)) * (s_v[{{},{1,k_s}}]:t()) * whiten_contentFeature
     end
-    
+
     targetFeature = targetFeature + s_mean:expandAs(targetFeature)
     local tFeature = targetFeature:resize(sg[1], sg[2], sg[3])
 
@@ -258,9 +258,9 @@ local function styleTransfer(content, style, iteration)
 
 
     --WCT on conv5_1
-    -------------------------------------------------------------------------- 
+    --------------------------------------------------------------------------
     --Note that since conv5 feature is hard to invert,
-    --if you want to better preserve the content, you can start from WCT on 
+    --if you want to better preserve the content, you can start from WCT on
     --conv4_1 first, i.e., on Line 283,
     --local cF4 = vgg4:forward(content):clone()
     --------------------------------------------------------------------------
@@ -269,9 +269,9 @@ local function styleTransfer(content, style, iteration)
     vgg5 = nil
 
     local csF5 = nil
-    if opt.swap5 ~= 0 then   
+    if opt.swap5 ~= 0 then
         csF5 = feature_swap_whiten(cF5, sF5)
-    else   
+    else
         csF5 = feature_wct(cF5, sF5)
     end
 
@@ -295,7 +295,7 @@ local function styleTransfer(content, style, iteration)
     vgg3 = nil
 
     local csF3 = feature_wct(cF3, sF3)
-    csF3 = opt.alpha * csF3 + (1.0-opt.alpha) * cF3 
+    csF3 = opt.alpha * csF3 + (1.0-opt.alpha) * cF3
 
     local Im3 = decoder3:forward(csF3)
     decoder3 = nil
@@ -319,7 +319,7 @@ local function styleTransfer(content, style, iteration)
     local csF1 = feature_wct(cF1, sF1)
     csF1 = opt.alpha * csF1 + (1.0-opt.alpha) * cF1
 
-    local Im1 = decoder1:forward(csF1) 
+    local Im1 = decoder1:forward(csF1)
     decoder1 = nil
 
     return Im1
@@ -338,7 +338,7 @@ else -- use a batch of content images
     contentPaths = extractImageNamesRecursive(opt.contentDir)
 end
 
-if opt.style ~= '' then 
+if opt.style ~= '' then
     style_image_list = opt.style:split(',')
     if #style_image_list == 1 then
         style_image_list = style_image_list[1]
@@ -365,7 +365,7 @@ for i=1,numContent do
     for j=1,numStyle do
 
         local stylePath = stylePaths[j]
-  
+
         styleExt = paths.extname(stylePath)
         styleImg = image.load(stylePath, 3, 'float')
         styleImg = sizePreprocess(styleImg, opt.styleSize)

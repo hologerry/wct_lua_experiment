@@ -85,7 +85,7 @@ function feature_decomposition(feature)
     local c_mean = torch.mean(feature1, 2)
     feature1 = feature1 - c_mean:expandAs(feature1)
     local featureCov = torch.mm(feature1, feature1:t()):div(sg[2]-1)  --512*512
-    local c_u, c_e, c_v = torch.svd(featureCov:float(), 'A')  
+    local c_u, c_e, c_v = torch.svd(featureCov:float(), 'A')
 
     local k_c = sg[1]
     for i=1, sg[1] do
@@ -115,19 +115,19 @@ end
 
 
 function feature_coloring(whiten_contentFeature, styleFeature)
-    
+
     local s_e, s_v, k_s, s_mean, _ = feature_decomposition(styleFeature)
     local s_d1 = s_e[{{1,k_s}}]:sqrt()
-    
+
     local tFeature = nil
     if opt.gpu >= 0 then
         tFeature = (s_v[{{},{1,k_s}}]:cuda()) * (torch.diag(s_d1:cuda())) * (s_v[{{},{1,k_s}}]:t():cuda()) * whiten_contentFeature
-    else 
+    else
         tFeature = s_v[{{},{1,k_s}}] * (torch.diag(s_d1)) * (s_v[{{},{1,k_s}}]:t()) * whiten_contentFeature
     end
 
     tFeature = tFeature + s_mean:expandAs(tFeature)
-   
+
     return tFeature
 end
 
@@ -144,7 +144,7 @@ function feature_wct(cF, sF1, sF2)
     local tFeature1 = feature_coloring(whiten_contentFeature, styleFeature1)
     local tFeature2 = feature_coloring(whiten_contentFeature, styleFeature2)
 
-    local tFeature = opt.beta * tFeature1 + (1 - opt.beta) * tFeature2 
+    local tFeature = opt.beta * tFeature1 + (1 - opt.beta) * tFeature2
     tFeature = tFeature:resize(sg[1], sg[2], sg[3])
 
     return tFeature
@@ -207,7 +207,7 @@ local function styleTransfer(content, style, iteration)
     local sF31 = vgg3:forward(s1):clone()
     local sF32 = vgg3:forward(s2):clone()
     vgg3 = nil
-  
+
     local csF3 = feature_wct(cF3, sF31, sF32)
     csF3 = opt.alpha * csF3 + (1-opt.alpha) * cF3
     local Im3 = decoder3:forward(csF3)
@@ -232,9 +232,9 @@ local function styleTransfer(content, style, iteration)
 
     local csF1 = feature_wct(cF1, sF11, sF12)
     csF1 = opt.alpha * csF1 + (1-opt.alpha) * cF1
-    local Im1 = decoder1:forward(csF1) 
+    local Im1 = decoder1:forward(csF1)
     decoder1 = nil
-    
+
     return Im1
 end
 
@@ -251,7 +251,7 @@ else -- use a batch of content images
     contentPaths = extractImageNamesRecursive(opt.contentDir)
 end
 
-if opt.style ~= '' then 
+if opt.style ~= '' then
     style_image_list = opt.style:split(',')
     for i=1, #style_image_list do
         table.insert(stylePaths, style_image_list[i])
@@ -273,7 +273,7 @@ for i=1,numContent do
 
     styleImg = {}
     styleName = ''
-    for j=1,numStyle do 
+    for j=1,numStyle do
         local stylePath = stylePaths[j]
         styleExt = paths.extname(stylePath)
         style = image.load(stylePath, 3, 'float')
@@ -300,5 +300,5 @@ for i=1,numContent do
             contentImg = output
         end
     end
-    
+
 end

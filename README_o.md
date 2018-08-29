@@ -1,7 +1,7 @@
 # [UniversalStyleTransfer](https://arxiv.org/pdf/1705.08086.pdf)
 Torch implementation of our NIPS17 [paper](https://arxiv.org/pdf/1705.08086.pdf) on universal style transfer.
 
-![#f03c15](https://placehold.it/15/f03c15/000000?text=+)![#f03c15](https://placehold.it/15/f03c15/000000?text=+)![#f03c15](https://placehold.it/15/f03c15/000000?text=+) TensorFlow [implementation](https://github.com/eridgd/WCT-TF) by Evan Davis. 
+![#f03c15](https://placehold.it/15/f03c15/000000?text=+)![#f03c15](https://placehold.it/15/f03c15/000000?text=+)![#f03c15](https://placehold.it/15/f03c15/000000?text=+) TensorFlow [implementation](https://github.com/eridgd/WCT-TF) by Evan Davis.
 
 ![#f03c15](https://placehold.it/15/f03c15/000000?text=+)![#f03c15](https://placehold.it/15/f03c15/000000?text=+)![#f03c15](https://placehold.it/15/f03c15/000000?text=+) PyTorch [implementation](https://github.com/sunshineatnoon/PytorchWCT) by Xueting Li.
 
@@ -16,7 +16,7 @@ Universal style transfer aims to transfer arbitrary visual styles to content ima
 
 - Linux
 - NVIDIA GPU + CUDA CuDNN
-- Torch 
+- Torch
 - Pretrained [encoders & decoders](https://drive.google.com/open?id=0B8_MZ8a8aoSeWm9HSTdXNE9Eejg) for image reconstruction only (put them under models/). If no CuDNN installed, please download the decoders [here](https://drive.google.com/open?id=1wVPtu4gGkUWpb9YtRecveFvdo4ZN5kMD).
 
 ## Style transfer
@@ -76,7 +76,7 @@ Below we show an example of texture synthesis path from t1 (left) to t2, then t3
 <p>
     <img src='figs/t.jpg' height=100 width=100 />
     <img src='figs/t0.jpg' height=100 width=100 />
-    <img src='figs/t3.jpg' height=100 width=100 /> 
+    <img src='figs/t3.jpg' height=100 width=100 />
     <img src='figs/t4.jpg' height=100 width=100 />
     <img src='figs/t5.jpg' height=100 width=100 />
     <img src='figs/t6.jpg' height=100 width=100 />
@@ -86,7 +86,7 @@ Below we show an example of texture synthesis path from t1 (left) to t2, then t3
 
 <p>
     <img src='figs/white.jpg' height=100 width=100 />
-    <img src='figs/white.jpg' height=100 width=100 /> 
+    <img src='figs/white.jpg' height=100 width=100 />
     <img src='figs/texture_interpolation.gif' width=200 />
     <img src='figs/3D_render.gif' width=200 />
 </p>
